@@ -35,6 +35,10 @@
    1. GLOBAL CONTAINER & COSMIC LUMINOUS BACKGROUND
    ============================================================================= */
 
+html {
+  scroll-behavior: smooth !important;
+}
+
 html, body, [data-testid="stAppViewContainer"], .stApp {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
   color: var(--text-dark) !important;

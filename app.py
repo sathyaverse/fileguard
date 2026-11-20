@@ -52,6 +52,9 @@ if "last_analysis" not in st.session_state:
 if "preset_sample" not in st.session_state:
     st.session_state.preset_sample = None
 
+if "trigger_instant_scan" not in st.session_state:
+    st.session_state.trigger_instant_scan = False
+
 # Sample data generators for instant demonstration
 def get_sample_file(sample_type: str):
     """Provides pre-configured binary samples to test immediately."""
@@ -113,19 +116,21 @@ with st.sidebar:
         "About": "ℹ️ About"
     }
 
-    current_idx = list(nav_options.keys()).index(st.session_state.active_nav) if st.session_state.active_nav in nav_options else 0
+    if "nav_radio" not in st.session_state:
+        st.session_state.nav_radio = st.session_state.active_nav
+
+    def on_nav_change():
+        st.session_state.active_nav = st.session_state.nav_radio
 
     selected_nav = st.radio(
         "Navigation Menu",
         options=list(nav_options.keys()),
         format_func=lambda k: nav_options[k],
-        index=current_idx,
+        key="nav_radio",
+        on_change=on_nav_change,
         label_visibility="collapsed"
     )
-
-    if selected_nav != st.session_state.active_nav:
-        st.session_state.active_nav = selected_nav
-        st.rerun()
+    st.session_state.active_nav = selected_nav
 
     # Bottom Sidebar Card: "Cyber Security Made Simple"
     render_html("""
@@ -166,9 +171,363 @@ render_html("""
 """)
 
 # -------------------------------------------------------------------------------------------------
-# VIEW 1: HOME (EXACT MATCH OF REFERENCE SCREENSHOT)
+# REUSABLE MODULAR SCANNER & RESULTS COMPONENTS
 # -------------------------------------------------------------------------------------------------
-if st.session_state.active_nav in ["Home", "Scan"]:
+def render_scan_module(is_full_width=False):
+    render_html('<div id="scan-chamber-anchor"></div>')
+
+    sample_to_use = None
+    if st.session_state.preset_sample:
+        p_name, p_content = st.session_state.preset_sample
+        render_html(f"""
+        <div style="background: rgba(37, 99, 235, 0.08); border: 1.5px solid rgba(37, 99, 235, 0.35); border-radius: 14px; padding: 12px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 13.5px; color: #0F172A;"><b>⚡ Loaded Sample:</b> <code>{p_name}</code> ({len(p_content)} bytes)</span>
+          <span style="background: #2563EB; color: white; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">Ready to Scan</span>
+        </div>
+        """)
+        sample_to_use = (p_name, p_content)
+
+    # Upload Card Container matching reference screenshot
+    render_html("""
+    <div class="fg-upload-panel">
+      <div class="fg-upload-dashed-box">
+        <svg class="fg-curved-arrow-left" viewBox="0 0 50 30" fill="none">
+          <path d="M10 25 C25 25 35 15 45 5" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
+          <polyline points="35 5 45 5 45 15" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg class="fg-curved-arrow-right" viewBox="0 0 50 30" fill="none">
+          <path d="M10 25 C25 25 35 15 45 5" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
+          <polyline points="35 5 45 5 45 15" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="fg-cloud-icon-box">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            <polyline points="12 11 12 16"/>
+            <polyline points="9 13 12 10 15 13"/>
+          </svg>
+        </div>
+        <div style="font-size: 19px; font-weight: 800; color: #0F172A; margin-bottom: 2px;">Drag & Drop your file here</div>
+        <div style="font-size: 13.5px; color: #64748B; margin-bottom: 8px;">or click to browse</div>
+        <div style="font-size: 12px; color: #94A3B8; font-weight: 500;">Supports: PDF, JPG, PNG, DOC, EXE, ZIP and more...</div>
+      </div>
+    </div>
+    """)
+
+    uploaded_file = st.file_uploader(
+        "Upload file",
+        type=None,
+        accept_multiple_files=False,
+        key=f"uploader_{'full' if is_full_width else 'home'}",
+        label_visibility="collapsed"
+    )
+
+    active_filename = None
+    active_bytes = None
+
+    if uploaded_file is not None:
+        active_filename = uploaded_file.name
+        active_bytes = uploaded_file.getvalue()
+        st.session_state.preset_sample = None
+    elif sample_to_use is not None:
+        active_filename, active_bytes = sample_to_use
+
+    if active_filename and active_bytes is not None:
+        render_html(f"""
+        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 18px; border-radius: 14px; margin-top: 10px; border: 1.5px solid #3B82F6; box-shadow: 0 4px 14px rgba(59,130,246,0.12);">
+          <div>
+            <span style="font-size: 12px; color: #64748B; font-weight: 700; text-transform: uppercase;">Ready to Scan:</span>
+            <b style="color: #0F172A; margin-left: 6px;">{active_filename}</b>
+          </div>
+          <span style="background: rgba(37,99,235,0.12); color: #2563EB; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 800;">{len(active_bytes):,} bytes</span>
+        </div>
+        """)
+
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+    analyze_btn = st.button("🔍 Analyze File", use_container_width=True, key=f"btn_analyze_{'full' if is_full_width else 'home'}")
+
+    should_scan = analyze_btn or st.session_state.trigger_instant_scan
+    if should_scan:
+        st.session_state.trigger_instant_scan = False
+        if not active_filename or active_bytes is None:
+            active_filename, active_bytes = get_sample_file("disguised_exe")
+
+        # 3D Holographic Scanning Chamber Modal
+        anim_box = st.empty()
+        with anim_box:
+            components.html(get_threejs_hero_html(mode="SCANNER", target_name=active_filename), height=260)
+            render_html(f"""
+            <div class="fg-scanner-modal">
+              <div style="text-align: center; margin-bottom: 12px;">
+                <div style="font-size: 18px; font-weight: 800; color: #0F172A;">✨ Holographic Scanning Chamber Active...</div>
+                <div style="font-size: 13px; color: #64748B;">Analyzing target: <b>{active_filename}</b></div>
+              </div>
+              <div class="fg-scan-steps-list">
+                <div class="fg-scan-step-item fg-scan-step-active">
+                  <div class="fg-spinner-dot"></div>
+                  <span>Reading low-level magic bytes at offset headers...</span>
+                </div>
+              </div>
+            </div>
+            """)
+        time.sleep(0.55)
+
+        with anim_box:
+            components.html(get_threejs_hero_html(mode="SCANNER", target_name=active_filename), height=260)
+            render_html(f"""
+            <div class="fg-scanner-modal">
+              <div style="text-align: center; margin-bottom: 12px;">
+                <div style="font-size: 18px; font-weight: 800; color: #0F172A;">✨ Holographic Scanning Chamber Active...</div>
+                <div style="font-size: 13px; color: #64748B;">Analyzing target: <b>{active_filename}</b></div>
+              </div>
+              <div class="fg-scan-steps-list">
+                <div class="fg-scan-step-item fg-scan-step-done">
+                  <div class="fg-check-dot">✓</div>
+                  <span>Magic byte signature extracted</span>
+                </div>
+                <div class="fg-scan-step-item fg-scan-step-active">
+                  <div class="fg-spinner-dot"></div>
+                  <span>Verifying declared extension against binary format...</span>
+                </div>
+              </div>
+            </div>
+            """)
+        time.sleep(0.55)
+
+        with anim_box:
+            components.html(get_threejs_hero_html(mode="SCANNER", target_name=active_filename), height=260)
+            render_html(f"""
+            <div class="fg-scanner-modal">
+              <div style="text-align: center; margin-bottom: 12px;">
+                <div style="font-size: 18px; font-weight: 800; color: #0F172A;">✨ Holographic Scanning Chamber Active...</div>
+                <div style="font-size: 13px; color: #64748B;">Analyzing target: <b>{active_filename}</b></div>
+              </div>
+              <div class="fg-scan-steps-list">
+                <div class="fg-scan-step-item fg-scan-step-done">
+                  <div class="fg-check-dot">✓</div>
+                  <span>Magic byte signature extracted</span>
+                </div>
+                <div class="fg-scan-step-item fg-scan-step-done">
+                  <div class="fg-check-dot">✓</div>
+                  <span>Extension verification complete</span>
+                </div>
+                <div class="fg-scan-step-item fg-scan-step-active">
+                  <div class="fg-spinner-dot"></div>
+                  <span>Verifying container structure & spoofing flags...</span>
+                </div>
+              </div>
+            </div>
+            """)
+        time.sleep(0.4)
+
+        analysis = analyze_file(active_bytes, active_filename)
+        analysis["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        st.session_state.last_analysis = analysis
+        st.session_state.scan_history.insert(0, analysis)
+        anim_box.empty()
+        st.rerun()
+
+    # Quick Test Demo Buttons Underneath Upload Box
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    d1, d2, d3, d4 = st.columns(4)
+    with d1:
+        if st.button("📄 Safe PDF", use_container_width=True, key=f"demo_safe_{'full' if is_full_width else 'home'}"):
+            n, c = get_sample_file("safe_pdf")
+            st.session_state.preset_sample = (n, c)
+            st.session_state.trigger_instant_scan = True
+            st.rerun()
+    with d2:
+        if st.button("⚠️ Disguised EXE", use_container_width=True, key=f"demo_exe_{'full' if is_full_width else 'home'}"):
+            n, c = get_sample_file("disguised_exe")
+            st.session_state.preset_sample = (n, c)
+            st.session_state.trigger_instant_scan = True
+            st.rerun()
+    with d3:
+        if st.button("🖼️ Spoofed PNG", use_container_width=True, key=f"demo_png_{'full' if is_full_width else 'home'}"):
+            n, c = get_sample_file("mismatched_png")
+            st.session_state.preset_sample = (n, c)
+            st.session_state.trigger_instant_scan = True
+            st.rerun()
+    with d4:
+        if st.button("🪤 Double Ext", use_container_width=True, key=f"demo_dbl_{'full' if is_full_width else 'home'}"):
+            n, c = get_sample_file("double_ext")
+            st.session_state.preset_sample = (n, c)
+            st.session_state.trigger_instant_scan = True
+            st.rerun()
+
+def render_results_card():
+    if not st.session_state.last_analysis:
+        return
+
+    st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+    res = st.session_state.last_analysis
+    status = res.get("status", "UNKNOWN")
+
+    if status == "SAFE":
+        card_class = "fg-result-card-safe"
+        pill_class = "fg-finding-safe"
+        finding_label = "🟢 VERIFIED FORMAT MATCH"
+        status_icon_html = """
+        <div class="fg-status-icon-wrap fg-status-icon-safe">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        """
+    elif status == "SUSPICIOUS":
+        card_class = "fg-result-card-suspicious"
+        pill_class = "fg-finding-suspicious"
+        finding_label = "🔴 SUSPICIOUS FORMAT MISMATCH"
+        status_icon_html = """
+        <div class="fg-status-icon-wrap fg-status-icon-suspicious">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        """
+    else:
+        card_class = "fg-result-card-unknown"
+        pill_class = "fg-finding-unknown"
+        finding_label = "🟠 UNKNOWN / UNSUPPORTED FORMAT"
+        status_icon_html = """
+        <div class="fg-status-icon-wrap fg-status-icon-unknown">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        """
+
+    # Interactive 3D Holographic Result Presentation
+    res_3d_col, res_info_col = st.columns([1, 1.4])
+    with res_3d_col:
+        components.html(get_threejs_hero_html(mode="RESULT", status=status, target_name=res.get('filename')), height=280)
+
+    with res_info_col:
+        render_html(f"""
+        <div class="fg-result-card {card_class}" style="margin-top: 0; min-height: 280px; display: flex; flex-direction: column; justify-content: center;">
+          <div class="fg-result-header">
+            {status_icon_html}
+            <div>
+              <div class="fg-status-finding-pill {pill_class}">{finding_label}</div>
+              <div class="fg-status-title-text">{res.get('status_title')}</div>
+              <div style="font-size: 16px; font-weight: 600; color: #334155;">{res.get('status_message')}</div>
+            </div>
+          </div>
+          <div style="font-size: 14.5px; color: #334155; line-height: 1.6; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.06);">
+            {res.get('risk_summary')}
+          </div>
+        </div>
+        """)
+
+    # File Properties Cards
+    st.markdown("<h4 style='font-size: 18px; font-weight: 800; color: #0F172A; margin-top: 20px; margin-bottom: 12px;'>File Forensic Properties</h4>", unsafe_allow_html=True)
+    
+    p1, p2, p3 = st.columns(3)
+    with p1:
+        render_html(f"""
+        <div class="fg-property-item">
+          <div class="fg-property-label">Target File Name</div>
+          <div class="fg-property-value">{res.get('filename')}</div>
+        </div>
+        <div style="height: 12px;"></div>
+        <div class="fg-property-item">
+          <div class="fg-property-label">File Size</div>
+          <div class="fg-property-value">{res.get('file_size_formatted')}</div>
+        </div>
+        """)
+
+    with p2:
+        render_html(f"""
+        <div class="fg-property-item">
+          <div class="fg-property-label">Declared Extension</div>
+          <div class="fg-property-value"><span class="fg-mono-code">.{res.get('declared_extension')}</span></div>
+        </div>
+        <div style="height: 12px;"></div>
+        <div class="fg-property-item">
+          <div class="fg-property-label">Actual Identified Format</div>
+          <div class="fg-property-value" style="color: #2563EB;">{res.get('actual_format')}</div>
+        </div>
+        """)
+
+    with p3:
+        threat_color = '#EF4444' if res.get('threat_level') in ['Critical', 'High'] else '#10B981'
+        render_html(f"""
+        <div class="fg-property-item">
+          <div class="fg-property-label">Category & MIME</div>
+          <div class="fg-property-value">{res.get('actual_category')} &bull; <span style="font-size: 12px; color: #64748B;">{res.get('mime_type')}</span></div>
+        </div>
+        <div style="height: 12px;"></div>
+        <div class="fg-property-item">
+          <div class="fg-property-label">Security Threat Rating</div>
+          <div class="fg-property-value" style="color: {threat_color};">{res.get('threat_level')}</div>
+        </div>
+        """)
+
+    st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+    render_html(f"""
+    <div class="fg-card" style="padding: 22px;">
+      <div style="font-weight: 800; font-size: 16px; margin-bottom: 12px; color: #0F172A;">🔬 Low-Level Signature & Cryptographic Fingerprints</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <div style="font-size: 11.5px; color: #64748B; font-weight: 700; text-transform: uppercase;">Magic Bytes (Hex Representation)</div>
+          <div style="margin-top: 6px;"><code class="fg-mono-code">{res.get('magic_hex')}</code></div>
+        </div>
+        <div>
+          <div style="font-size: 11.5px; color: #64748B; font-weight: 700; text-transform: uppercase;">Magic Bytes (ASCII Representation)</div>
+          <div style="margin-top: 6px;"><code class="fg-mono-code">{res.get('magic_ascii')}</code></div>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(226, 232, 240, 0.9);">
+        <div style="font-size: 11.5px; color: #64748B; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">SHA-256 Checksum</div>
+        <code>{res.get('hashes', {}).get('sha256')}</code>
+      </div>
+    </div>
+    """)
+
+    # Download Report Buttons
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+    txt_report = generate_text_report(res)
+    md_report = generate_markdown_report(res)
+    json_report = generate_json_report(res)
+
+    rep_c1, rep_c2, rep_c3 = st.columns(3)
+    with rep_c1:
+        st.download_button(
+            label="📄 Download Text Report (.txt)",
+            data=txt_report,
+            file_name=f"FileGuard_Report_{res.get('filename')}.txt",
+            mime="text/plain",
+            key=f"dl_txt_{res.get('filename')}",
+            use_container_width=True
+        )
+    with rep_c2:
+        st.download_button(
+            label="📝 Download Markdown (.md)",
+            data=md_report,
+            file_name=f"FileGuard_Report_{res.get('filename')}.md",
+            mime="text/markdown",
+            key=f"dl_md_{res.get('filename')}",
+            use_container_width=True
+        )
+    with rep_c3:
+        st.download_button(
+            label="📊 Download JSON Export (.json)",
+            data=json_report,
+            file_name=f"FileGuard_Report_{res.get('filename')}.json",
+            mime="application/json",
+            key=f"dl_json_{res.get('filename')}",
+            use_container_width=True
+        )
+
+# -------------------------------------------------------------------------------------------------
+# VIEW 1: HOME (LANDING PAGE & HERO LABORATORY)
+# -------------------------------------------------------------------------------------------------
+if st.session_state.active_nav == "Home":
 
     # HERO SECTION (2 COLUMNS: TYPOGRAPHY ON LEFT, 3D SHIELD ON RIGHT)
     hero_left_col, hero_right_col = st.columns([1.1, 1.1])
@@ -186,11 +545,28 @@ if st.session_state.active_nav in ["Home", "Scan"]:
         </div>
         """)
 
-        btn_c1, btn_c2 = st.columns([1.2, 1])
+        btn_c1, btn_c2 = st.columns([1.1, 1.1])
         with btn_c1:
-            if st.button("⚡ Start Scanning ➔", use_container_width=True):
+            if st.button("⚡ Start Scanning ➔", use_container_width=True, key="hero_start_scan_btn"):
+                st.session_state.nav_radio = "Scan"
                 st.session_state.active_nav = "Scan"
                 st.rerun()
+        with btn_c2:
+            if st.button("🧪 Quick Test Disguised EXE", use_container_width=True, key="hero_quick_scan_btn"):
+                n, c = get_sample_file("disguised_exe")
+                st.session_state.preset_sample = (n, c)
+                st.session_state.trigger_instant_scan = True
+                st.session_state.nav_radio = "Scan"
+                st.session_state.active_nav = "Scan"
+                st.rerun()
+
+        render_html("""
+        <div style="margin-top: 10px; margin-bottom: 8px;">
+          <a href="#scan-chamber-anchor" style="font-size: 13px; color: #2563EB; font-weight: 700; text-decoration: none;">
+            ⬇️ Or scroll down to drag & drop files
+          </a>
+        </div>
+        """)
 
     with hero_right_col:
         # Interactive 3D Holographic Laboratory Scene (Three.js WebGL Engine)
@@ -262,189 +638,14 @@ if st.session_state.active_nav in ["Home", "Scan"]:
     bot_left_col, bot_right_col = st.columns([1.35, 1])
 
     with bot_left_col:
-        # Check preset sample
-        sample_to_use = None
-        if st.session_state.preset_sample:
-            p_name, p_content = st.session_state.preset_sample
-            render_html(f"""
-            <div style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 14px; padding: 10px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 13.5px; color: #0F172A;"><b>Loaded Test Sample:</b> <code>{p_name}</code> ({len(p_content)} bytes)</span>
-              <span style="background: #2563EB; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">Ready</span>
-            </div>
-            """)
-            sample_to_use = (p_name, p_content)
-
-        # Upload Card Container matching reference screenshot
-        render_html("""
-        <div class="fg-upload-panel">
-          <div class="fg-upload-dashed-box">
-            <!-- Curved arrows left and right -->
-            <svg class="fg-curved-arrow-left" viewBox="0 0 50 30" fill="none">
-              <path d="M10 25 C25 25 35 15 45 5" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
-              <polyline points="35 5 45 5 45 15" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <svg class="fg-curved-arrow-right" viewBox="0 0 50 30" fill="none">
-              <path d="M10 25 C25 25 35 15 45 5" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round"/>
-              <polyline points="35 5 45 5 45 15" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-
-            <!-- Gradient Cloud Upload Icon -->
-            <div class="fg-cloud-icon-box">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
-                <polyline points="12 11 12 16"/>
-                <polyline points="9 13 12 10 15 13"/>
-              </svg>
-            </div>
-
-            <div style="font-size: 19px; font-weight: 800; color: #0F172A; margin-bottom: 2px;">Drag & Drop your file here</div>
-            <div style="font-size: 13.5px; color: #64748B; margin-bottom: 8px;">or click to browse</div>
-            <div style="font-size: 12px; color: #94A3B8; font-weight: 500;">Supports: PDF, JPG, PNG, DOC, EXE and more...</div>
-          </div>
-        </div>
-        """)
-
-        # Streamlit Native File Uploader placed right below/integrated
-        uploaded_file = st.file_uploader(
-            "Upload file",
-            type=None,
-            accept_multiple_files=False,
-            label_visibility="collapsed"
-        )
-
-        active_filename = None
-        active_bytes = None
-
-        if uploaded_file is not None:
-            active_filename = uploaded_file.name
-            active_bytes = uploaded_file.getvalue()
-            st.session_state.preset_sample = None
-        elif sample_to_use is not None:
-            active_filename, active_bytes = sample_to_use
-
-        # Analyze File Button
-        if active_filename and active_bytes is not None:
-            render_html(f"""
-            <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 18px; border-radius: 14px; margin-top: 10px; border: 1px solid #E2E8F0; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-              <div>
-                <span style="font-size: 12px; color: #64748B; font-weight: 600; text-transform: uppercase;">Selected File:</span>
-                <b style="color: #0F172A; margin-left: 6px;">{active_filename}</b>
-              </div>
-              <span style="background: rgba(37,99,235,0.1); color: #2563EB; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">{len(active_bytes):,} bytes</span>
-            </div>
-            """)
-
-        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-        analyze_btn = st.button("🔍 Analyze File", use_container_width=True)
-
-        if analyze_btn:
-            if not active_filename or active_bytes is None:
-                # Default to demo safe file if clicked without upload
-                active_filename, active_bytes = get_sample_file("safe_pdf")
-
-            # 3D Holographic Scanning Chamber Modal
-            anim_box = st.empty()
-            with anim_box:
-                components.html(get_threejs_hero_html(mode="SCANNER", target_name=active_filename), height=260)
-                render_html(f"""
-                <div class="fg-scanner-modal">
-                  <div style="text-align: center; margin-bottom: 12px;">
-                    <div style="font-size: 18px; font-weight: 800; color: #0F172A;">✨ Holographic Scanning Chamber Active...</div>
-                    <div style="font-size: 13px; color: #64748B;">Analyzing target: <b>{active_filename}</b></div>
-                  </div>
-                  <div class="fg-scan-steps-list">
-                    <div class="fg-scan-step-item fg-scan-step-active">
-                      <div class="fg-spinner-dot"></div>
-                      <span>Reading low-level magic bytes at offset headers...</span>
-                    </div>
-                  </div>
-                </div>
-                """)
-            time.sleep(0.55)
-
-            with anim_box:
-                components.html(get_threejs_hero_html(mode="SCANNER", target_name=active_filename), height=260)
-                render_html(f"""
-                <div class="fg-scanner-modal">
-                  <div style="text-align: center; margin-bottom: 12px;">
-                    <div style="font-size: 18px; font-weight: 800; color: #0F172A;">✨ Holographic Scanning Chamber Active...</div>
-                    <div style="font-size: 13px; color: #64748B;">Analyzing target: <b>{active_filename}</b></div>
-                  </div>
-                  <div class="fg-scan-steps-list">
-                    <div class="fg-scan-step-item fg-scan-step-done">
-                      <div class="fg-check-dot">✓</div>
-                      <span>Magic byte signature extracted</span>
-                    </div>
-                    <div class="fg-scan-step-item fg-scan-step-active">
-                      <div class="fg-spinner-dot"></div>
-                      <span>Verifying declared extension against binary format...</span>
-                    </div>
-                  </div>
-                </div>
-                """)
-            time.sleep(0.55)
-
-            with anim_box:
-                components.html(get_threejs_hero_html(mode="SCANNER", target_name=active_filename), height=260)
-                render_html(f"""
-                <div class="fg-scanner-modal">
-                  <div style="text-align: center; margin-bottom: 12px;">
-                    <div style="font-size: 18px; font-weight: 800; color: #0F172A;">✨ Holographic Scanning Chamber Active...</div>
-                    <div style="font-size: 13px; color: #64748B;">Analyzing target: <b>{active_filename}</b></div>
-                  </div>
-                  <div class="fg-scan-steps-list">
-                    <div class="fg-scan-step-item fg-scan-step-done">
-                      <div class="fg-check-dot">✓</div>
-                      <span>Magic byte signature extracted</span>
-                    </div>
-                    <div class="fg-scan-step-item fg-scan-step-done">
-                      <div class="fg-check-dot">✓</div>
-                      <span>Extension verification complete</span>
-                    </div>
-                    <div class="fg-scan-step-item fg-scan-step-active">
-                      <div class="fg-spinner-dot"></div>
-                      <span>Verifying container structure & spoofing flags...</span>
-                    </div>
-                  </div>
-                </div>
-                """)
-            time.sleep(0.4)
-
-            analysis = analyze_file(active_bytes, active_filename)
-            analysis["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            st.session_state.last_analysis = analysis
-            st.session_state.scan_history.insert(0, analysis)
-            anim_box.empty()
-            st.rerun()
-
-        # Quick Test Demo Buttons Underneath Upload Box
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        demo_c1, demo_c2, demo_c3 = st.columns(3)
-        with demo_c1:
-            if st.button("📄 Test Safe PDF", use_container_width=True):
-                n, c = get_sample_file("safe_pdf")
-                st.session_state.preset_sample = (n, c)
-                st.rerun()
-        with demo_c2:
-            if st.button("⚠️ Disguised EXE", use_container_width=True):
-                n, c = get_sample_file("disguised_exe")
-                st.session_state.preset_sample = (n, c)
-                st.rerun()
-        with demo_c3:
-            if st.button("🖼️ Spoofed PNG", use_container_width=True):
-                n, c = get_sample_file("mismatched_png")
-                st.session_state.preset_sample = (n, c)
-                st.rerun()
+        render_scan_module(is_full_width=False)
 
     with bot_right_col:
-        # SECURITY OVERVIEW CARD MATCHING REFERENCE IMAGE
         total_scanned = len(st.session_state.scan_history)
         safe_files = sum(1 for s in st.session_state.scan_history if s.get("status") == "SAFE")
         suspicious_files = sum(1 for s in st.session_state.scan_history if s.get("status") == "SUSPICIOUS")
         issues_found = sum(1 for s in st.session_state.scan_history if s.get("status") != "SAFE")
 
-        # Display realistic metrics starting from image baseline if clean session
         disp_total = f"{1200 + total_scanned}" if total_scanned == 0 else f"{total_scanned}"
         disp_safe = f"{980 + safe_files}" if total_scanned == 0 else f"{safe_files}"
         disp_susp = f"{120 + suspicious_files}" if total_scanned == 0 else f"{suspicious_files}"
@@ -456,7 +657,6 @@ if st.session_state.active_nav in ["Home", "Scan"]:
             <span>🛡️</span> <span>Security Overview</span>
           </div>
 
-          <!-- 4 Colored Mini Stat Tiles -->
           <div class="fg-stat-tiles-row">
             <div class="fg-mini-tile fg-mini-tile-blue">
               <div style="font-size: 16px; margin-bottom: 2px;">📁</div>
@@ -480,10 +680,9 @@ if st.session_state.active_nav in ["Home", "Scan"]:
             </div>
           </div>
 
-          <!-- Recent Activity Feed -->
           <div class="fg-recent-activity-header">
             <span>Recent Activity</span>
-            <span style="color: #2563EB; font-size: 12.5px; cursor: pointer;">View All ➔</span>
+            <span style="color: #2563EB; font-size: 12.5px; cursor: pointer;">Live Feed</span>
           </div>
           <div>
             <div class="fg-recent-item">
@@ -511,171 +710,32 @@ if st.session_state.active_nav in ["Home", "Scan"]:
         </div>
         """)
 
-    # ---------------------------------------------------------------------------------------------
-    # FORENSIC RESULTS CARD (APPEARS WHEN FILE HAS BEEN ANALYZED)
-    # ---------------------------------------------------------------------------------------------
-    if st.session_state.last_analysis:
-        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-        res = st.session_state.last_analysis
-        status = res.get("status", "UNKNOWN")
+    render_results_card()
 
-        if status == "SAFE":
-            card_class = "fg-result-card-safe"
-            pill_class = "fg-finding-safe"
-            finding_label = "🟢 VERIFIED FORMAT MATCH"
-            status_icon_html = """
-            <div class="fg-status-icon-wrap fg-status-icon-safe">
-              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <polyline points="9 12 11 14 15 10"/>
-              </svg>
-            </div>
-            """
-        elif status == "SUSPICIOUS":
-            card_class = "fg-result-card-suspicious"
-            pill_class = "fg-finding-suspicious"
-            finding_label = "🔴 SUSPICIOUS FORMAT MISMATCH"
-            status_icon_html = """
-            <div class="fg-status-icon-wrap fg-status-icon-suspicious">
-              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-            </div>
-            """
-        else:
-            card_class = "fg-result-card-unknown"
-            pill_class = "fg-finding-unknown"
-            finding_label = "🟠 UNKNOWN / UNSUPPORTED FORMAT"
-            status_icon_html = """
-            <div class="fg-status-icon-wrap fg-status-icon-unknown">
-              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </div>
-            """
+# -------------------------------------------------------------------------------------------------
+# VIEW 2: DEDICATED 3D FILE SCANNING LABORATORY
+# -------------------------------------------------------------------------------------------------
+elif st.session_state.active_nav == "Scan":
+    render_html("""
+    <div style="margin-bottom: 18px;">
+      <h2 style="font-size: 28px; font-weight: 800; color: #0F172A; margin-bottom: 4px; letter-spacing: -0.6px;">
+        🔍 3D Holographic File Scanning Laboratory
+      </h2>
+      <p style="font-size: 14px; color: #64748B; margin: 0;">
+        Deep binary signature inspection, magic bytes analysis, and disguised file anomaly detection.
+      </p>
+    </div>
+    """)
 
-        # Interactive 3D Holographic Result Presentation
-        res_3d_col, res_info_col = st.columns([1, 1.4])
-        with res_3d_col:
-            components.html(get_threejs_hero_html(mode="RESULT", status=status, target_name=res.get('filename')), height=280)
+    # Top Holographic Scanning Chamber
+    current_target = st.session_state.preset_sample[0] if st.session_state.preset_sample else "Chamber Ready"
+    components.html(get_threejs_hero_html(mode="SCANNER", target_name=current_target), height=250)
 
-        with res_info_col:
-            render_html(f"""
-            <div class="fg-result-card {card_class}" style="margin-top: 0; min-height: 280px; display: flex; flex-direction: column; justify-content: center;">
-              <div class="fg-result-header">
-                {status_icon_html}
-                <div>
-                  <div class="fg-status-finding-pill {pill_class}">{finding_label}</div>
-                  <div class="fg-status-title-text">{res.get('status_title')}</div>
-                  <div style="font-size: 16px; font-weight: 600; color: #334155;">{res.get('status_message')}</div>
-                </div>
-              </div>
-              <div style="font-size: 14.5px; color: #334155; line-height: 1.6; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.06);">
-                {res.get('risk_summary')}
-              </div>
-            </div>
-            """)
+    # Full-width Scanning Module
+    render_scan_module(is_full_width=True)
 
-        # File Properties Cards
-        st.markdown("<h4 style='font-size: 18px; font-weight: 800; color: #0F172A; margin-top: 20px; margin-bottom: 12px;'>File Forensic Properties</h4>", unsafe_allow_html=True)
-        
-        p1, p2, p3 = st.columns(3)
-        with p1:
-            render_html(f"""
-            <div class="fg-property-item">
-              <div class="fg-property-label">Target File Name</div>
-              <div class="fg-property-value">{res.get('filename')}</div>
-            </div>
-            <div style="height: 12px;"></div>
-            <div class="fg-property-item">
-              <div class="fg-property-label">File Size</div>
-              <div class="fg-property-value">{res.get('file_size_formatted')}</div>
-            </div>
-            """)
-
-        with p2:
-            render_html(f"""
-            <div class="fg-property-item">
-              <div class="fg-property-label">Declared Extension</div>
-              <div class="fg-property-value"><span class="fg-mono-code">.{res.get('declared_extension')}</span></div>
-            </div>
-            <div style="height: 12px;"></div>
-            <div class="fg-property-item">
-              <div class="fg-property-label">Actual Identified Format</div>
-              <div class="fg-property-value" style="color: #2563EB;">{res.get('actual_format')}</div>
-            </div>
-            """)
-
-        with p3:
-            threat_color = '#EF4444' if res.get('threat_level') in ['Critical', 'High'] else '#10B981'
-            render_html(f"""
-            <div class="fg-property-item">
-              <div class="fg-property-label">Category & MIME</div>
-              <div class="fg-property-value">{res.get('actual_category')} &bull; <span style="font-size: 12px; color: #64748B;">{res.get('mime_type')}</span></div>
-            </div>
-            <div style="height: 12px;"></div>
-            <div class="fg-property-item">
-              <div class="fg-property-label">Security Threat Rating</div>
-              <div class="fg-property-value" style="color: {threat_color};">{res.get('threat_level')}</div>
-            </div>
-            """)
-
-        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
-        render_html(f"""
-        <div class="fg-card" style="padding: 22px;">
-          <div style="font-weight: 800; font-size: 16px; margin-bottom: 12px; color: #0F172A;">🔬 Low-Level Signature & Cryptographic Fingerprints</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div>
-              <div style="font-size: 11.5px; color: #64748B; font-weight: 700; text-transform: uppercase;">Magic Bytes (Hex Representation)</div>
-              <div style="margin-top: 6px;"><code class="fg-mono-code">{res.get('magic_hex')}</code></div>
-            </div>
-            <div>
-              <div style="font-size: 11.5px; color: #64748B; font-weight: 700; text-transform: uppercase;">Magic Bytes (ASCII Representation)</div>
-              <div style="margin-top: 6px;"><code class="fg-mono-code">{res.get('magic_ascii')}</code></div>
-            </div>
-          </div>
-          <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(226, 232, 240, 0.9);">
-            <div style="font-size: 11.5px; color: #64748B; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">SHA-256 Checksum</div>
-            <code>{res.get('hashes', {}).get('sha256')}</code>
-          </div>
-        </div>
-        """)
-
-        # Download Report Buttons
-        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
-        txt_report = generate_text_report(res)
-        md_report = generate_markdown_report(res)
-        json_report = generate_json_report(res)
-
-        rep_c1, rep_c2, rep_c3 = st.columns(3)
-        with rep_c1:
-            st.download_button(
-                label="📄 Download Text Report (.txt)",
-                data=txt_report,
-                file_name=f"FileGuard_Report_{res.get('filename')}.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
-        with rep_c2:
-            st.download_button(
-                label="📝 Download Markdown (.md)",
-                data=md_report,
-                file_name=f"FileGuard_Report_{res.get('filename')}.md",
-                mime="text/markdown",
-                use_container_width=True
-            )
-        with rep_c3:
-            st.download_button(
-                label="📊 Download JSON Export (.json)",
-                data=json_report,
-                file_name=f"FileGuard_Report_{res.get('filename')}.json",
-                mime="application/json",
-                use_container_width=True
-            )
+    # Forensic Results Card
+    render_results_card()
 
 # -------------------------------------------------------------------------------------------------
 # VIEW 2: DASHBOARD
