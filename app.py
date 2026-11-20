@@ -39,6 +39,40 @@ def render_html(html_content: str):
     cleaned = re.sub(r'^[ \t]+', '', html_content, flags=re.MULTILINE)
     st.markdown(cleaned, unsafe_allow_html=True)
 
+# Render Dynamic Holographic Background Animation Layer
+render_html("""
+<div class="fg-cyber-bg-layer">
+  <!-- Floating Glowing Orbs -->
+  <div class="fg-bg-orb fg-orb-cyan"></div>
+  <div class="fg-bg-orb fg-orb-violet"></div>
+  <div class="fg-bg-orb fg-orb-blue"></div>
+  <div class="fg-bg-orb fg-orb-purple"></div>
+
+  <!-- Cyber Grid Laser Sweep Wave -->
+  <div class="fg-bg-grid-plane">
+    <div class="fg-bg-grid-laser"></div>
+  </div>
+
+  <!-- Floating Holographic Particles & Sparkles -->
+  <div class="fg-particle fg-p1">✦</div>
+  <div class="fg-particle fg-p2">🛡️</div>
+  <div class="fg-particle fg-p3">✧</div>
+  <div class="fg-particle fg-p4">🔒</div>
+  <div class="fg-particle fg-p5">✦</div>
+  <div class="fg-particle fg-p6">⚡</div>
+  <div class="fg-particle fg-p7">✧</div>
+  <div class="fg-particle fg-p8">🛡️</div>
+  <div class="fg-particle fg-p9">✦</div>
+  <div class="fg-particle fg-p10">✧</div>
+  <div class="fg-particle fg-p11">🔒</div>
+  <div class="fg-particle fg-p12">✦</div>
+
+  <!-- Animated Ambient Light Streaks -->
+  <div class="fg-light-streak fg-streak-1"></div>
+  <div class="fg-light-streak fg-streak-2"></div>
+</div>
+""")
+
 # Session State Initialization
 if "scan_history" not in st.session_state:
     st.session_state.scan_history = []

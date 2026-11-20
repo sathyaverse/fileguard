@@ -47,14 +47,14 @@ body,
   color: var(--text-dark) !important;
   background-color: #E2E8F0 !important;
   background:
-    radial-gradient(ellipse at 78% 18%, rgba(6, 182, 212, 0.5) 0%, transparent 45%),
-    radial-gradient(ellipse at 65% 30%, rgba(59, 130, 246, 0.42) 0%, transparent 50%),
-    radial-gradient(ellipse at 92% 65%, rgba(139, 92, 246, 0.35) 0%, transparent 45%),
-    radial-gradient(circle at 18% 85%, rgba(37, 99, 235, 0.28) 0%, transparent 40%),
+    radial-gradient(ellipse at 78% 18%, rgba(6, 182, 212, 0.45) 0%, transparent 45%),
+    radial-gradient(ellipse at 65% 30%, rgba(59, 130, 246, 0.38) 0%, transparent 50%),
+    radial-gradient(ellipse at 92% 65%, rgba(139, 92, 246, 0.32) 0%, transparent 45%),
+    radial-gradient(circle at 18% 85%, rgba(37, 99, 235, 0.25) 0%, transparent 40%),
     linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 25%, #e0e7ff 55%, #bae6fd 85%, #dbeafe 100%) !important;
   background-size: 180% 180% !important;
   background-attachment: fixed !important;
-  animation: cosmic-mesh 24s ease-in-out infinite alternate !important;
+  animation: cosmic-mesh 20s ease-in-out infinite alternate !important;
   overflow-x: hidden;
 }
 
@@ -62,14 +62,195 @@ body,
   0% {
     background-position: 0% 15%;
   }
-
   50% {
     background-position: 100% 85%;
   }
-
   100% {
     background-position: 10% 25%;
   }
+}
+
+/* =============================================================================
+   DYNAMIC HOLOGRAPHIC BACKGROUND ANIMATION LAYER
+   ============================================================================= */
+
+.fg-cyber-bg-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Floating Glowing Orbs */
+.fg-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform, opacity;
+}
+
+.fg-orb-cyan {
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.55) 0%, rgba(56, 189, 248, 0.25) 50%, transparent 75%);
+  top: -10%;
+  right: 8%;
+  animation: float-orb-cyan 18s ease-in-out infinite alternate;
+}
+
+.fg-orb-violet {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(168, 85, 247, 0.22) 50%, transparent 75%);
+  top: 38%;
+  right: -6%;
+  animation: float-orb-violet 22s ease-in-out infinite alternate;
+}
+
+.fg-orb-blue {
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.42) 0%, rgba(59, 130, 246, 0.2) 50%, transparent 75%);
+  bottom: -6%;
+  left: 6%;
+  animation: float-orb-blue 20s ease-in-out infinite alternate;
+}
+
+.fg-orb-purple {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.45) 0%, rgba(147, 51, 234, 0.2) 50%, transparent 75%);
+  top: 22%;
+  left: 28%;
+  animation: float-orb-purple 25s ease-in-out infinite alternate;
+}
+
+@keyframes float-orb-cyan {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+  50% { transform: translate3d(-90px, 100px, 0) scale(1.18); opacity: 0.9; }
+  100% { transform: translate3d(70px, -60px, 0) scale(0.9); opacity: 0.6; }
+}
+
+@keyframes float-orb-violet {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.6; }
+  50% { transform: translate3d(-110px, -80px, 0) scale(1.15); opacity: 0.85; }
+  100% { transform: translate3d(60px, 90px, 0) scale(0.95); opacity: 0.55; }
+}
+
+@keyframes float-orb-blue {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.55; }
+  50% { transform: translate3d(130px, -90px, 0) scale(1.2); opacity: 0.85; }
+  100% { transform: translate3d(-70px, 70px, 0) scale(0.88); opacity: 0.5; }
+}
+
+@keyframes float-orb-purple {
+  0% { transform: translate3d(0, 0, 0) scale(0.95); opacity: 0.5; }
+  50% { transform: translate3d(-100px, 120px, 0) scale(1.25); opacity: 0.8; }
+  100% { transform: translate3d(90px, -70px, 0) scale(1.0); opacity: 0.55; }
+}
+
+/* Cyber Grid with Sweeping Scan Laser */
+.fg-bg-grid-plane {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(circle at 60% 40%, black 65%, transparent 95%);
+  -webkit-mask-image: radial-gradient(circle at 60% 40%, black 65%, transparent 95%);
+}
+
+.fg-bg-grid-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.9) 30%, rgba(139, 92, 246, 0.9) 70%, transparent 100%);
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.85), 0 0 36px rgba(59, 130, 246, 0.5);
+  animation: laser-sweep 9s ease-in-out infinite;
+}
+
+@keyframes laser-sweep {
+  0% { top: -5%; opacity: 0; }
+  15% { opacity: 0.95; }
+  85% { opacity: 0.95; }
+  100% { top: 105%; opacity: 0; }
+}
+
+/* Floating Particles & Holographic Security Icons */
+.fg-particle {
+  position: absolute;
+  color: rgba(99, 102, 241, 0.55);
+  font-size: 15px;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.65));
+  animation: particle-rise 18s linear infinite;
+  will-change: transform, opacity;
+}
+
+.fg-p1  { left: 6%;  animation-duration: 15s; animation-delay: 0s;   font-size: 18px; color: rgba(6, 182, 212, 0.7); }
+.fg-p2  { left: 18%; animation-duration: 22s; animation-delay: 3s;   font-size: 22px; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.7)); }
+.fg-p3  { left: 32%; animation-duration: 17s; animation-delay: 1.5s; font-size: 14px; color: rgba(168, 85, 247, 0.65); }
+.fg-p4  { left: 46%; animation-duration: 24s; animation-delay: 5s;   font-size: 20px; filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.65)); }
+.fg-p5  { left: 58%; animation-duration: 16s; animation-delay: 2s;   font-size: 16px; color: rgba(6, 182, 212, 0.7); }
+.fg-p6  { left: 70%; animation-duration: 19s; animation-delay: 6s;   font-size: 19px; }
+.fg-p7  { left: 82%; animation-duration: 14s; animation-delay: 4s;   font-size: 15px; color: rgba(59, 130, 246, 0.7); }
+.fg-p8  { left: 94%; animation-duration: 23s; animation-delay: 7s;   font-size: 22px; }
+.fg-p9  { left: 12%; animation-duration: 18s; animation-delay: 8.5s; font-size: 17px; color: rgba(168, 85, 247, 0.7); }
+.fg-p10 { left: 40%; animation-duration: 20s; animation-delay: 9s;   font-size: 14px; color: rgba(6, 182, 212, 0.65); }
+.fg-p11 { left: 64%; animation-duration: 21s; animation-delay: 11s;  font-size: 20px; }
+.fg-p12 { left: 86%; animation-duration: 16s; animation-delay: 10s;  font-size: 16px; color: rgba(59, 130, 246, 0.75); }
+
+@keyframes particle-rise {
+  0% {
+    transform: translate3d(0, 105vh, 0) scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(40px, 50vh, 0) scale(1.15) rotate(180deg);
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(-40px, -10vh, 0) scale(0.6) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Ambient Cyber Light Streaks */
+.fg-light-streak {
+  position: absolute;
+  width: 140%;
+  height: 200px;
+  background: linear-gradient(135deg, transparent 20%, rgba(6, 182, 212, 0.16) 48%, rgba(139, 92, 246, 0.16) 52%, transparent 80%);
+  transform: rotate(-25deg);
+  filter: blur(24px);
+  will-change: transform, opacity;
+}
+
+.fg-streak-1 {
+  top: 8%;
+  left: -20%;
+  animation: streak-drift 22s ease-in-out infinite alternate;
+}
+
+.fg-streak-2 {
+  top: 55%;
+  left: -20%;
+  animation: streak-drift 28s ease-in-out infinite alternate;
+  animation-delay: -9s;
+}
+
+@keyframes streak-drift {
+  0% { transform: translateY(-45px) rotate(-25deg) scaleY(0.9); opacity: 0.45; }
+  50% { transform: translateY(45px) rotate(-23deg) scaleY(1.25); opacity: 0.9; }
+  100% { transform: translateY(-35px) rotate(-26deg) scaleY(1.0); opacity: 0.5; }
 }
 
 /* Subtle cosmic grid lines & star dust */
