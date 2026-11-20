@@ -1,0 +1,809 @@
+/* 
+  =============================================================================
+  FILEGUARD - ULTIMATE CYBERSECURITY WEB APPLICATION
+  MATCHING REFERENCE DESIGN SPECIFICATION (media_1795164463837_3319f498.jpg)
+  =============================================================================
+  - Left Sidebar: Deep royal navy/indigo glass with glowing active pill & Cyber Security card
+  - Main Background: Radiant luminous cosmic cyan, electric blue, violet & lavender
+  - Hero: 3D Holographic Shield on glowing pedestal with orbit rings & floating file tags
+  - 3 Feature Pills: File Signature Detection, Extension Verification, Suspicious File Identification
+  - Bottom: Drag & Drop Upload with curved arrows & Security Overview with live metrics
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary-blue: #2563EB;
+  --electric-blue: #3B82F6;
+  --accent-cyan: #06B6D4;
+  --accent-violet: #8B5CF6;
+  --accent-purple: #7C3AED;
+  --status-safe: #10B981;
+  --status-suspicious: #EF4444;
+  --status-unknown: #F59E0B;
+  
+  --text-dark: #0F172A;
+  --text-muted: #64748B;
+  
+  --glass-card: rgba(255, 255, 255, 0.82);
+  --glass-card-hover: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 14px 36px -4px rgba(37, 99, 235, 0.08), 0 6px 16px -2px rgba(124, 58, 237, 0.05);
+}
+
+/* =============================================================================
+   1. GLOBAL CONTAINER & COSMIC LUMINOUS BACKGROUND
+   ============================================================================= */
+
+html, body, [data-testid="stAppViewContainer"], .stApp {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  color: var(--text-dark) !important;
+  background-color: #E2E8F0 !important;
+  background: 
+    radial-gradient(ellipse at 78% 18%, rgba(6, 182, 212, 0.5) 0%, transparent 45%),
+    radial-gradient(ellipse at 65% 30%, rgba(59, 130, 246, 0.42) 0%, transparent 50%),
+    radial-gradient(ellipse at 92% 65%, rgba(139, 92, 246, 0.35) 0%, transparent 45%),
+    radial-gradient(circle at 18% 85%, rgba(37, 99, 235, 0.28) 0%, transparent 40%),
+    linear-gradient(135deg, #c7d2fe 0%, #ddd6fe 25%, #e0e7ff 55%, #bae6fd 85%, #dbeafe 100%) !important;
+  background-size: 180% 180% !important;
+  background-attachment: fixed !important;
+  animation: cosmic-mesh 24s ease-in-out infinite alternate !important;
+  overflow-x: hidden;
+}
+
+@keyframes cosmic-mesh {
+  0% { background-position: 0% 15%; }
+  50% { background-position: 100% 85%; }
+  100% { background-position: 10% 25%; }
+}
+
+/* Subtle cosmic grid lines & star dust */
+[data-testid="stAppViewContainer"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(circle at 60% 40%, black 50%, transparent 90%);
+  -webkit-mask-image: radial-gradient(circle at 60% 40%, black 50%, transparent 90%);
+}
+
+.block-container {
+  max-width: 1260px !important;
+  padding-top: 1.2rem !important;
+  padding-bottom: 3rem !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Hide Streamlit top header, Deploy button, and toolbar */
+header,
+header[data-testid="stHeader"],
+.stDeployButton,
+[data-testid="stDeployButton"],
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+#MainMenu {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+footer {
+  display: none !important;
+}
+
+/* =============================================================================
+   2. LEFT SIDEBAR (LIGHT FUTURISTIC GLASSMORPHISM - NO BLACK / NO DARK)
+   ============================================================================= */
+
+[data-testid="stSidebar"] {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(245, 243, 255, 0.94) 50%, rgba(238, 242, 255, 0.96) 100%) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 6px 0 28px rgba(65, 105, 225, 0.08) !important;
+}
+
+[data-testid="stSidebar"] .block-container {
+  padding: 1.5rem 1rem !important;
+}
+
+/* Sidebar Logo Header */
+.fg-side-logo-wrap {
+  text-align: center;
+  padding: 14px 0 18px 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  margin-bottom: 18px;
+}
+
+.fg-side-shield-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 10px auto;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 50%, #8B5CF6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 30px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.45);
+}
+
+.fg-side-title {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: #0F172A !important;
+}
+
+.fg-side-subtitle {
+  font-size: 11.5px;
+  color: #64748B !important;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+  font-weight: 600;
+}
+
+/* Sidebar Radio Navigation Items */
+[data-testid="stSidebar"] [data-testid="stRadio"] > div {
+  gap: 10px;
+}
+
+/* Hide default circular radio input dots for a clean modern button look */
+[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {
+  display: none !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.95) !important;
+  padding: 13px 20px !important;
+  border-radius: 16px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(65, 105, 225, 0.05) !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label p,
+[data-testid="stSidebar"] [data-testid="stRadio"] label span,
+[data-testid="stSidebar"] [data-testid="stRadio"] label div {
+  color: #0F172A !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  letter-spacing: -0.2px !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+  background: #FFFFFF !important;
+  border-color: #3B82F6 !important;
+  transform: translateX(4px) !important;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.16) !important;
+}
+
+/* Active navigation pill styling */
+[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"],
+[data-testid="stSidebar"] [data-testid="stRadio"] div[aria-checked="true"],
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4) !important;
+  transform: scale(1.02) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"] p,
+[data-testid="stSidebar"] [data-testid="stRadio"] div[aria-checked="true"] p,
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) p,
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) span {
+  color: #FFFFFF !important;
+}
+
+/* Sidebar Bottom "Cyber Security Made Simple" Card */
+.fg-side-bottom-card {
+  margin-top: 24px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.95) !important;
+  border-radius: 20px;
+  padding: 18px 16px;
+  text-align: center;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(65, 105, 225, 0.06);
+}
+
+.fg-side-bottom-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 10px auto;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  border: 1.5px solid rgba(6, 182, 212, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0284C7;
+  font-size: 24px;
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.25);
+}
+
+.fg-side-bottom-text {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0F172A !important;
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+}
+
+/* =============================================================================
+   3. TOP HEADER BAR: BADGE & USER PROFILE
+   ============================================================================= */
+
+.fg-topbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.fg-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.fg-badge-green-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+}
+
+.fg-user-pill-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fg-stay-secure-badge {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #065F46;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.fg-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3B82F6, #7C3AED);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  border: 2px solid white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* =============================================================================
+   4. HERO SECTION (2 COLUMNS: TYPOGRAPHY ON LEFT, 3D SHIELD ON RIGHT)
+   ============================================================================= */
+
+.fg-hero-split-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 28px;
+  align-items: center;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.fg-hero-title-main {
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -1.5px;
+  color: #0F172A;
+  margin: 12px 0 10px 0;
+}
+
+.fg-hero-title-gradient {
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 60%, #9333EA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.fg-hero-desc {
+  font-size: 16.5px;
+  font-weight: 500;
+  color: #475569;
+  line-height: 1.55;
+  margin-bottom: 22px;
+  max-width: 480px;
+}
+
+/* Floating 3D Holographic Shield Stage */
+.fg-holo-stage {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pedestal Glowing Base Platform */
+.fg-holo-pedestal {
+  position: absolute;
+  bottom: 14px;
+  width: 250px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.5) 0%, rgba(59, 130, 246, 0.2) 50%, transparent 80%);
+  box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 0 60px rgba(59, 130, 246, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  transform: rotateX(65deg);
+}
+
+/* Concentric Orbiting Hologram Rings */
+.fg-holo-orbit-1 {
+  position: absolute;
+  width: 270px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(6, 182, 212, 0.6);
+  transform: rotateX(68deg) rotateZ(-12deg);
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
+  animation: holo-spin-1 18s linear infinite;
+}
+
+.fg-holo-orbit-2 {
+  position: absolute;
+  width: 230px;
+  height: 100px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.5);
+  transform: rotateX(68deg) rotateZ(24deg);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  animation: holo-spin-2 14s linear infinite reverse;
+}
+
+@keyframes holo-spin-1 {
+  from { transform: rotateX(68deg) rotateZ(0deg); }
+  to { transform: rotateX(68deg) rotateZ(360deg); }
+}
+
+@keyframes holo-spin-2 {
+  from { transform: rotateX(68deg) rotateZ(360deg); }
+  to { transform: rotateX(68deg) rotateZ(0deg); }
+}
+
+/* Central 3D Shield Vector with Lock inside */
+.fg-holo-shield-wrap {
+  position: relative;
+  z-index: 5;
+  width: 140px;
+  height: 160px;
+  filter: drop-shadow(0 18px 35px rgba(37, 99, 235, 0.45)) drop-shadow(0 0 25px rgba(6, 182, 212, 0.5));
+  animation: holo-shield-float 4.2s ease-in-out infinite;
+}
+
+@keyframes holo-shield-float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
+}
+
+/* Floating 3D File Type Icon Badges */
+.fg-float-tile {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.15);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #1E293B;
+  pointer-events: none;
+  animation: tile-drift 5s ease-in-out infinite alternate;
+  z-index: 6;
+}
+
+.fg-tile-img {
+  top: 10%;
+  left: 10%;
+  animation-duration: 5.5s;
+}
+
+.fg-tile-code {
+  bottom: 25%;
+  left: 6%;
+  animation-duration: 4.8s;
+  animation-direction: alternate-reverse;
+}
+
+.fg-tile-pdf {
+  top: 16%;
+  right: 6%;
+  animation-duration: 6s;
+}
+
+.fg-tile-exe {
+  bottom: 22%;
+  right: 8%;
+  animation-duration: 5.2s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes tile-drift {
+  0% { transform: translateY(0px) rotate(-3deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+  100% { transform: translateY(4px) rotate(-1deg); }
+}
+
+/* =============================================================================
+   5. THREE HORIZONTAL CAPABILITY CARDS
+   ============================================================================= */
+
+.fg-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.fg-cap-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.fg-cap-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16px 36px rgba(37, 99, 235, 0.14), 0 0 20px rgba(6, 182, 212, 0.1);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.fg-cap-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fg-cap-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.fg-cap-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 2px;
+}
+
+.fg-cap-sub {
+  font-size: 12.5px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.fg-cap-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(241, 245, 249, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.fg-cap-card:hover .fg-cap-arrow {
+  background: #3B82F6;
+  color: white;
+  transform: translateX(3px);
+}
+
+/* =============================================================================
+   6. BOTTOM SECTION: UPLOAD PANEL (LEFT) & SECURITY OVERVIEW (RIGHT)
+   ============================================================================= */
+
+.fg-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* Upload Panel Container */
+.fg-upload-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 26px 28px;
+  box-shadow: 0 12px 36px rgba(37, 99, 235, 0.08);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 270px;
+}
+
+.fg-upload-dashed-box {
+  border: 2px dashed rgba(139, 92, 246, 0.4);
+  border-radius: 20px;
+  padding: 24px 20px;
+  text-align: center;
+  position: relative;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.fg-upload-dashed-box:hover {
+  border-color: #3B82F6;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.fg-cloud-icon-box {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px auto;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+}
+
+/* Curved arrows in upload card */
+.fg-curved-arrow-left {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  opacity: 0.65;
+}
+
+.fg-curved-arrow-right {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%) scaleX(-1);
+  width: 48px;
+  opacity: 0.65;
+}
+
+/* Security Overview Card */
+.fg-overview-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 24px 24px;
+  box-shadow: 0 12px 36px rgba(37, 99, 235, 0.08);
+}
+
+.fg-overview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 16px;
+}
+
+/* 4 Colored Mini Stat Tiles */
+.fg-stat-tiles-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.fg-mini-tile {
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.fg-mini-tile-blue {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #1D4ED8;
+}
+
+.fg-mini-tile-green {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #047857;
+}
+
+.fg-mini-tile-red {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #B91C1C;
+}
+
+.fg-mini-tile-orange {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #B45309;
+}
+
+.fg-mini-tile-num {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.fg-mini-tile-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 3px;
+  opacity: 0.85;
+}
+
+/* Recent Activity List */
+.fg-recent-activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 12px;
+}
+
+.fg-recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+  font-size: 13px;
+}
+
+.fg-recent-item:last-child {
+  border-bottom: none;
+}
+
+.fg-recent-name {
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fg-badge-safe-sm {
+  background: rgba(16, 185, 129, 0.15);
+  color: #065F46;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.fg-badge-danger-sm {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991B1B;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.fg-badge-info-sm {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1E40AF;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =============================================================================
+   7. BUTTONS (STREAMLIT & PILL GRADIENTS)
+   ============================================================================= */
+
+div.stButton > button {
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 28px !important;
+  padding: 12px 28px !important;
+  font-weight: 800 !important;
+  font-size: 15px !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35), 0 0 14px rgba(124, 58, 237, 0.25) !important;
+  transition: all 0.28s ease !important;
+  cursor: pointer !important;
+}
+
+div.stButton > button:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.5), 0 0 24px rgba(6, 182, 212, 0.3) !important;
+}
+
+/* Responsive Rules */
+iframe {
+  border: none !important;
+  border-radius: 20px !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 900px) {
+  .fg-hero-split-grid {
+    grid-template-columns: 1fr;
+  }
+  .fg-capability-grid {
+    grid-template-columns: 1fr;
+  }
+  .fg-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
