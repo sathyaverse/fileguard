@@ -468,11 +468,41 @@ def get_threejs_hero_html(mode="HERO", status="SAFE", target_name=None) -> str:
       pGeom.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
       pGeom.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
 
+      // Create radiant diamond star glitter sprite texture
+      function createGlitterSprite() {{
+        const c = document.createElement('canvas');
+        c.width = 64;
+        c.height = 64;
+        const gctx = c.getContext('2d');
+        const radial = gctx.createRadialGradient(32, 32, 0, 32, 32, 30);
+        radial.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        radial.addColorStop(0.3, 'rgba(6, 182, 212, 0.85)');
+        radial.addColorStop(0.65, 'rgba(139, 92, 246, 0.45)');
+        radial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        gctx.fillStyle = radial;
+        gctx.beginPath();
+        gctx.arc(32, 32, 30, 0, Math.PI * 2);
+        gctx.fill();
+
+        // 4-point star spike flare
+        gctx.strokeStyle = '#FFFFFF';
+        gctx.lineWidth = 3;
+        gctx.beginPath();
+        gctx.moveTo(32, 4); gctx.lineTo(32, 60);
+        gctx.moveTo(4, 32); gctx.lineTo(60, 32);
+        gctx.stroke();
+
+        return new THREE.CanvasTexture(c);
+      }}
+
       const pMat = new THREE.PointsMaterial({{
-        size: 0.15,
+        size: 0.65,
+        map: createGlitterSprite(),
         vertexColors: true,
         transparent: true,
-        opacity: 0.85
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
       }});
       const starParticles = new THREE.Points(pGeom, pMat);
       scene.add(starParticles);
