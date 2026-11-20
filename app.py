@@ -55,6 +55,15 @@ if "preset_sample" not in st.session_state:
 if "trigger_instant_scan" not in st.session_state:
     st.session_state.trigger_instant_scan = False
 
+if "redirect_to" not in st.session_state:
+    st.session_state.redirect_to = None
+
+# Safe pre-instantiation redirect handling before widgets are created
+if st.session_state.redirect_to:
+    st.session_state.active_nav = st.session_state.redirect_to
+    st.session_state.nav_radio = st.session_state.redirect_to
+    st.session_state.redirect_to = None
+
 # Sample data generators for instant demonstration
 def get_sample_file(sample_type: str):
     """Provides pre-configured binary samples to test immediately."""
@@ -548,16 +557,14 @@ if st.session_state.active_nav == "Home":
         btn_c1, btn_c2 = st.columns([1.1, 1.1])
         with btn_c1:
             if st.button("⚡ Start Scanning ➔", use_container_width=True, key="hero_start_scan_btn"):
-                st.session_state.nav_radio = "Scan"
-                st.session_state.active_nav = "Scan"
+                st.session_state.redirect_to = "Scan"
                 st.rerun()
         with btn_c2:
             if st.button("🧪 Quick Test Disguised EXE", use_container_width=True, key="hero_quick_scan_btn"):
                 n, c = get_sample_file("disguised_exe")
                 st.session_state.preset_sample = (n, c)
                 st.session_state.trigger_instant_scan = True
-                st.session_state.nav_radio = "Scan"
-                st.session_state.active_nav = "Scan"
+                st.session_state.redirect_to = "Scan"
                 st.rerun()
 
         render_html("""
